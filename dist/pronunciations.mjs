@@ -1,5 +1,5 @@
 // Sources observed on Cambridge Dictionary pronunciation pages on 2026-09-25.
-// Stream from the original source; no Cambridge audio files are redistributed.
+// Cambridge blocks cross-origin media hotlinks, so the app opens the official page.
 const entries=[
  ['subject','u/uks/uksub/uksubhe003','ˈsʌb.dʒekt'],
  ['library','c/cdo/cdo01/cdo0123uklibr1319','ˈlaɪ.brər.i'],
@@ -38,7 +38,7 @@ const entries=[
  ['cloudy','u/ukc/ukclo/ukclosu010','ˈklaʊ.di'],
  ['recycle','u/ukr/ukrec/ukrecum010','ˌriːˈsaɪ.kəl']
 ];
-export const pronunciations=Object.fromEntries(entries.map(([word,path,ipa])=>[word,{url:`https://dictionary.cambridge.org/media/english/uk_pron/${path}.mp3`,ipa,source:`https://dictionary.cambridge.org/pronunciation/english/${word}`} ]));
+export const pronunciations=Object.fromEntries(entries.map(([word,,ipa])=>[word,{ipa,source:`https://dictionary.cambridge.org/pronunciation/english/${word}`} ]));
 export const officialAudio='https://www.cambridgeenglish.org/Images/506891-a2-key-for-schools-handbook-for-teachers-listening-audio-files.mp3';
 export const officialHandbook='https://www.cambridgeenglish.org/Images/168174-cambridge-english-key-for-schools-handbook-for-teachers.pdf';
 export const officialDigitalTest='https://ceq.inspera.com/player/?assessmentRunId=539334934&context=exam';
