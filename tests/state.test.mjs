@@ -64,3 +64,16 @@ test('vocabulary filtering matches English, Chinese, and topic without changing 
  assert.deepEqual(filterVocabulary(words,{query:'',topic:'自然與天氣'}).map(v=>v.word),['weather','cloudy']);
  assert.equal(words.length,3);
 });
+
+test('part-aware exam answers with optional paper and part survive save and reload', () => {
+ const s = createState();
+ recordAnswer(s, {attempt: 'exam1', id: 'rw1-1', category: 'exam', paper: 'readingWriting', part: 1, correct: true, date: '2026-09-25'});
+ let raw;
+ const store = {setItem(k, v) { raw = v; }, getItem() { return raw; }};
+ assert.equal(saveState(s, store), true);
+ const loaded = readState(store);
+ assert.equal(loaded.answers.length, 1);
+ assert.equal(loaded.answers[0].paper, 'readingWriting');
+ assert.equal(loaded.answers[0].part, 1);
+ assert.equal(loaded.answers[0].correct, true);
+});

@@ -7,7 +7,21 @@ export function readState(storage){
  try{
   const s=JSON.parse((storage??globalThis.localStorage).getItem(STORAGE_KEY));
   if(!s||s.version!==1||!Array.isArray(s.answers)||!Array.isArray(s.mistakes)||!Array.isArray(s.activities)||!s.drafts||typeof s.drafts!=='object'||Array.isArray(s.drafts))return createState();
-  return {version:1,answers:s.answers.filter(a=>a&&string(a.attempt)&&string(a.id)&&string(a.category)&&typeof a.correct==='boolean'&&string(a.date)),mistakes:[...new Set(s.mistakes.filter(string))],activities:s.activities.filter(a=>a&&string(a.id)&&string(a.category)&&string(a.date)),drafts:Object.fromEntries(Object.entries(s.drafts).filter(([,v])=>string(v)))};
+  return {
+   version:1,
+   answers:s.answers.filter(a=>a&&string(a.attempt)&&string(a.id)&&(string(a.category)||string(a.paper))&&typeof a.correct==='boolean'&&string(a.date)).map(a=>({
+    attempt:a.attempt,
+    id:a.id,
+    category:a.category||a.paper||'general',
+    correct:a.correct,
+    date:a.date,
+    ...(string(a.paper)?{paper:a.paper}:{}),
+    ...(Number.isInteger(a.part)?{part:a.part}:{})
+   })),
+   mistakes:[...new Set(s.mistakes.filter(string))],
+   activities:s.activities.filter(a=>a&&string(a.id)&&string(a.category)&&string(a.date)),
+   drafts:Object.fromEntries(Object.entries(s.drafts).filter(([,v])=>string(v)))
+  };
  }catch{return createState()}
 }
 export function saveState(s,storage){try{(storage??globalThis.localStorage).setItem(STORAGE_KEY,JSON.stringify(s));return true}catch{return false}}

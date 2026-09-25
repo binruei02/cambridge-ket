@@ -14,13 +14,17 @@ python3 -m http.server 4173 --bind 127.0.0.1 --directory dist
 
 ## 内容
 
-- 851 張 A2 Key 核心字彙卡、15 個生活主題與 851 題單字小測驗
-- 中英文搜尋、每頁 24 字與不限次數連續練習
-- 12 題閱讀、10 題合成語音聽力
-- 4 個寫作任務、8 個親子口說話題
-- 每日 8 題混合練習、錯題重練、最近 7 天紀錄
+- **雙模式架構**：
+  - **模式一：學習複習**：851 張 A2 Key 核心字彙卡、中英搜尋、主題分類、Cambridge Dictionary 官方發音頁直連、分項暖身。
+  - **模式二：KET 題型練習**：嚴格比照 Cambridge A2 Key for Schools 官方格式。作答前全英文，交卷後提供英文 Evidence 與繁體中文詳細解析。
+    - **Reading and Writing（7 Parts · 32 題）**：Part 1 告示簡訊、Part 2 三文比對配對、Part 3 長文理解、Part 4 選詞克漏字、Part 5 開放式填空（每格一字）、Part 6 引導短 Email（$\ge 25$ 字）、Part 7 連續三圖看圖寫作（$\ge 35$ 字）。
+    - **Listening（5 Parts · 25 題）**：每段錄音播放兩次（Play 1 of 2 / Play 2 of 2），支援慢速（0.75x）與逐字稿展開。
+    - **Speaking（2 Parts）**：Part 1 考官生活問答、Part 2 情境討論（5 大話題、搭檔提問提示與句型）。
+    - **全真模擬試卷**：完整 32 題 Reading & Writing 與 25 題 Listening 連續測驗。
+- **錯題筆記與進度**：錯題自動加入，答對自動移出；作答進度以本機 `localStorage` 保存。
 
-題目、提示與解說：`dist/content.mjs`。
+題目、提示與解說：`dist/content.mjs`、`dist/exam-content.mjs`。
+考試引擎與計分：`dist/exam-engine.mjs`。
 作答與本機儲存邏輯：`dist/state.mjs`。
 頁面與操作：`dist/app.js`、`dist/index.html`、`dist/styles.css`。
 
@@ -28,7 +32,7 @@ python3 -m http.server 4173 --bind 127.0.0.1 --directory dist
 
 ```sh
 node --test tests/*.test.mjs
-node --check dist/app.js
+node --check dist/app.js && node --check dist/exam-content.mjs && node --check dist/exam-engine.mjs
 ```
 
 ## 使用說明
