@@ -2,6 +2,13 @@
 // Designed strictly according to Cambridge A2 Key for Schools specifications.
 // All prompts, passages, and choices are 100% English.
 
+import {
+  rwObjectiveQuestionsSet2,
+  writingExamTasksSet2,
+  listeningObjectiveQuestionsSet2,
+  speakingExamPartsSet2
+} from './exam-content-set2.mjs';
+
 export const examParts = {
   readingWriting: [
     {number: 1, name: 'Part 1', title: 'Notices & Short Messages', questionsCount: 6, format: 'Multiple Choice (3 options)', description: 'Read six short real-world texts (signs, notices, messages) for the main message.'},
@@ -435,6 +442,7 @@ export const writingExamTasks = [
     id: 'rw6-31',
     paper: 'readingWriting',
     part: 6,
+    set: 1,
     format: 'writing',
     title: 'Part 6: Guided Short Email',
     type: 'Email to a friend',
@@ -458,6 +466,7 @@ export const writingExamTasks = [
     id: 'rw7-32',
     paper: 'readingWriting',
     part: 7,
+    set: 1,
     format: 'writing',
     title: 'Part 7: Picture Story Writing',
     type: 'Picture story',
@@ -858,8 +867,11 @@ export const listeningObjectiveQuestions = [
 ];
 
 // Speaking Tasks (Parts 1 & 2)
+// Speaking Tasks (Parts 1 & 2)
 export const speakingExamParts = [
   {
+    id: 'spk1-1',
+    set: 1,
     part: 1,
     title: 'Part 1: Personal Questions & Daily Life',
     timing: '3–4 minutes',
@@ -901,6 +913,8 @@ export const speakingExamParts = [
     explanationZh: 'Speaking Part 1 著重於自我介紹與日常生活的流暢回答。請盡量用 2 到 3 句完整句子回答，不必害怕文法小失誤。'
   },
   {
+    id: 'spk1-2',
+    set: 1,
     part: 2,
     title: 'Part 2: Collaborative Discussion with Partner',
     timing: '5–6 minutes',
@@ -923,4 +937,19 @@ export const speakingExamParts = [
   }
 ];
 
-export const examQuestions = [...rwObjectiveQuestions, ...listeningObjectiveQuestions];
+export {
+  rwObjectiveQuestionsSet2,
+  writingExamTasksSet2,
+  listeningObjectiveQuestionsSet2,
+  speakingExamPartsSet2
+};
+
+export const allWritingExamTasks = [...writingExamTasks, ...writingExamTasksSet2];
+export const allSpeakingExamParts = [...speakingExamParts, ...speakingExamPartsSet2];
+
+export const examQuestions = [
+  ...rwObjectiveQuestions.map(q => ({...q, set: q.set || 1})),
+  ...listeningObjectiveQuestions.map(q => ({...q, set: q.set || 1})),
+  ...rwObjectiveQuestionsSet2,
+  ...listeningObjectiveQuestionsSet2
+];

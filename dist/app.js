@@ -1,8 +1,9 @@
 import {topics, vocabulary, vocabQuestions, reading, listening, writing, speaking, questions} from './content.mjs';
 import {pronunciations, officialAudio, officialHandbook, officialDigitalTest} from './pronunciations.mjs';
 import {selectPractice, readState, saveState, todayKey, recordAnswer, recordActivity, wordCount, selectDaily, filterVocabulary} from './state.mjs';
-import {examParts, examQuestions, rwObjectiveQuestions, listeningObjectiveQuestions, writingExamTasks, speakingExamParts} from './exam-content.mjs';
+import {examParts, examQuestions, rwObjectiveQuestions, listeningObjectiveQuestions, writingExamTasks, allWritingExamTasks, speakingExamParts, allSpeakingExamParts} from './exam-content.mjs';
 import {assemblePaper, isAnswerCorrect, normaliseTextAnswer, validateExamContent} from './exam-engine.mjs';
+import {evaluateWriting} from './writing-evaluator.mjs';
 
 const main = document.querySelector('#main');
 const state = readState();
@@ -249,28 +250,30 @@ function examHub() {
     ${heading('KET 題型練習', '結構完全比照 Cambridge A2 Key for Schools 官方試卷。作答前為全英文題目，交卷後提供 Evidence 線索與中文詳細解析。', 'OFFICIAL EXAM FORMAT PRACTICE', '#home')}
 
     <div class="exam-hub-hero">
-      <span class="hero-tag" style="top:20px;right:20px">CAMBRIDGE A2 KEY</span>
-      <h2 style="font-size:24px;margin-bottom:8px">全真分項練習與模擬試卷</h2>
+      <span class="hero-tag" style="top:20px;right:20px">CAMBRIDGE A2 KEY · SET 1 &amp; SET 2</span>
+      <h2 style="font-size:24px;margin-bottom:8px">全真分項練習與全套模擬試卷</h2>
       <p style="color:var(--muted);font-size:14px;max-width:700px">
-        題目均為原創 A2 程度練習，不複製官方受版權保護試題。聽力為練習用英式合成語音（每題可聽兩次），並提供官方公開樣題入口。
+        已收錄<strong>雙套完整 A2 Key 題庫</strong>（Set 1 與全新 Set 2），總計超過 118 道原創練習題。支援完整模考、分項練習、自動英式朗讀，並可切換試卷或進行全題庫混合衝刺。
       </p>
-      <div class="hero-bottom" style="margin-top:20px;gap:14px;flex-wrap:wrap">
-        <a class="btn" href="#mock/readingWriting">完整 Reading & Writing 模考（32 題） ↗</a>
-        <a class="btn" href="#mock/listening" style="background:#3a6584">完整 Listening 模考（25 題） ↗</a>
-        <a class="btn secondary" href="#exam-continuous">考前連續衝刺 ↗</a>
+      <div class="hero-bottom" style="margin-top:20px;gap:12px;flex-wrap:wrap">
+        <a class="btn" href="#mock/readingWriting/1">試卷一 R&amp;W 模考（32 題） ↗</a>
+        <a class="btn" href="#mock/readingWriting/2" style="background:#2d8a6b">★ 試卷二 R&amp;W 模考（全新 32 題） ↗</a>
+        <a class="btn" href="#mock/listening/1" style="background:#3a6584">試卷一 聽力模考（25 題） ↗</a>
+        <a class="btn" href="#mock/listening/2" style="background:#2a759b">★ 試卷二 聽力模考（全新 25 題） ↗</a>
+        <a class="btn secondary" href="#exam-continuous">考前全題庫連續衝刺（110+ 題） ↗</a>
         <a class="btn ghost" href="#official">聽 Cambridge 官方樣題 ↗</a>
       </div>
     </div>
 
     <section class="exam-paper-section">
-      <h2><span class="icon yellow">${icon('book')}</span> Reading and Writing <small style="font-size:14px;color:var(--muted);font-weight:400">（60 分鐘 · 7 Parts · 32 題）</small></h2>
+      <h2><span class="icon yellow">${icon('book')}</span> Reading and Writing <small style="font-size:14px;color:var(--muted);font-weight:400">（60 分鐘 · 7 Parts · 雙套共 64 題）</small></h2>
       <div class="exam-parts-grid">
         ${rw.map(p => `
           <a class="exam-card" href="#exam/readingWriting/${p.number}">
             <div>
               <div class="exam-card-top">
                 <span class="exam-part-pill">${p.name}</span>
-                <span class="subtle">${p.questionsCount} 題</span>
+                <span class="subtle">${p.questionsCount * (p.number >= 6 ? 1 : 2)} 題（雙套）</span>
               </div>
               <h3>${p.title}</h3>
               <p>${p.description}</p>
@@ -285,14 +288,14 @@ function examHub() {
     </section>
 
     <section class="exam-paper-section">
-      <h2><span class="icon blue">${icon('headphones')}</span> Listening <small style="font-size:14px;color:var(--muted);font-weight:400">（約 30 分鐘 · 5 Parts · 25 題 · 每段播放兩次）</small></h2>
+      <h2><span class="icon blue">${icon('headphones')}</span> Listening <small style="font-size:14px;color:var(--muted);font-weight:400">（約 30 分鐘 · 5 Parts · 雙套共 50 題 · 每段播放兩次）</small></h2>
       <div class="exam-parts-grid">
         ${l.map(p => `
           <a class="exam-card" href="#exam/listening/${p.number}">
             <div>
               <div class="exam-card-top">
                 <span class="exam-part-pill">${p.name}</span>
-                <span class="subtle">${p.questionsCount} 題</span>
+                <span class="subtle">${p.questionsCount * 2} 題（雙套）</span>
               </div>
               <h3>${p.title}</h3>
               <p>${p.description}</p>
@@ -307,14 +310,14 @@ function examHub() {
     </section>
 
     <section class="exam-paper-section">
-      <h2><span class="icon lavender">${icon('chat')}</span> Speaking <small style="font-size:14px;color:var(--muted);font-weight:400">（8–10 分鐘 · 2 Parts · 親子搭檔陪練）</small></h2>
+      <h2><span class="icon lavender">${icon('chat')}</span> Speaking <small style="font-size:14px;color:var(--muted);font-weight:400">（8–10 分鐘 · 2 Parts · 雙套共 4 個任務 · 親子搭檔陪練）</small></h2>
       <div class="exam-parts-grid">
         ${spk.map(p => `
           <a class="exam-card" href="#exam/speaking/${p.number}">
             <div>
               <div class="exam-card-top">
                 <span class="exam-part-pill">${p.name}</span>
-                <span class="subtle">考官問答</span>
+                <span class="subtle">雙套題目</span>
               </div>
               <h3>${p.title}</h3>
               <p>${p.description}</p>
@@ -400,10 +403,14 @@ function playAudioFile(path, fallbackText = null, rate = 0.9, onEnd = null) {
     console.error('Audio load error:', path, e);
     if (token !== speechToken) return;
     currentActiveAudio = null;
-    if (status?.isConnected) {
-      status.innerHTML = '<span style="color:#c93b2b">⚠️ 真人音檔載入失敗，請嘗試強制重新整理（Cmd+Shift+R）。</span>';
+    if (fallbackText) {
+      speak(fallbackText, rate);
+    } else {
+      if (status?.isConnected) {
+        status.innerHTML = '<span style="color:#c93b2b">⚠️ 真人音檔載入失敗，請嘗試強制重新整理（Cmd+Shift+R）。</span>';
+      }
+      notify('真人音檔載入失敗，請強制重新整理頁面。');
     }
-    notify('真人音檔載入失敗，請強制重新整理頁面。');
   };
 
   audio.play().catch(err => {
@@ -708,19 +715,124 @@ function examResultView() {
   `;
 }
 
+// ----------------- WRITING REVIEWS & EVALUATOR -----------------
+const REVIEWS_KEY = 'ket-garden-writing-reviews-v1';
+function readReviews() {
+  try {
+    return JSON.parse(localStorage.getItem(REVIEWS_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+function saveReview(id, review) {
+  try {
+    const all = readReviews();
+    all[id] = review;
+    localStorage.setItem(REVIEWS_KEY, JSON.stringify(all));
+  } catch {}
+}
+
+function renderReviewReport(review) {
+  if (!review) return '';
+  const bandColors = {
+    'Pass with Distinction': {bg: '#eaf5eb', text: '#247257', border: '#bde3c3'},
+    'Pass with Merit': {bg: '#eef5fb', text: '#2a6496', border: '#b8daf0'},
+    'Pass': {bg: '#fff9e6', text: '#8a6d3b', border: '#faebcc'},
+    'Needs Review': {bg: '#fdf2f2', text: '#a94442', border: '#ebccd1'}
+  };
+  const theme = bandColors[review.band] || bandColors['Pass'];
+
+  return `
+    <div class="review-report-panel" style="margin-top:24px;padding:22px;background:${theme.bg};border:2px solid ${theme.border};border-radius:14px" tabindex="-1" id="writing-review-result">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+        <div>
+          <span style="display:inline-block;padding:3px 10px;border-radius:12px;background:${theme.text};color:#fff;font-size:12px;font-weight:700">CAMBRIDGE A2 KEY EVALUATION</span>
+          <h3 style="margin:8px 0 4px 0;font-size:22px;color:${theme.text}">考官評等：${esc(review.bandZh)}</h3>
+          <p style="margin:0;font-size:14px;color:var(--muted)">字數統計：<strong>${review.wordCount}</strong> 字（門檻 ${review.minWords} 字）</p>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:36px;font-weight:800;color:${theme.text};line-height:1">${review.score}<small style="font-size:18px;color:var(--muted)"> / ${review.maxScore}</small></div>
+          <span style="font-size:13px;color:var(--muted)">得分率 ${review.percentage}%</span>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin:16px 0">
+        ${Object.values(review.criteria).map(c => `
+          <div style="background:#fff;padding:12px;border-radius:8px;border:1px solid rgba(0,0,0,0.06)">
+            <div style="display:flex;justify-content:space-between;font-weight:600;font-size:13px;margin-bottom:6px">
+              <span>${esc(c.label)}</span>
+              <span style="color:var(--green)">${c.score} / ${c.max}</span>
+            </div>
+            <div style="background:#eef0ee;height:6px;border-radius:3px;overflow:hidden">
+              <div style="background:var(--green);height:100%;width:${(c.score / c.max) * 100}%"></div>
+            </div>
+            <p style="margin:6px 0 0 0;font-size:12px;color:var(--muted);line-height:1.4">${esc(c.feedback)}</p>
+          </div>
+        `).join('')}
+      </div>
+
+      <div style="background:#fff;padding:14px 16px;border-radius:10px;margin-bottom:14px;border-left:4px solid ${theme.text}">
+        <strong style="color:${theme.text}">考官總評語：</strong>
+        <p style="margin:4px 0 0 0;font-size:14px;line-height:1.6">${esc(review.examinerCommentZh)}</p>
+      </div>
+
+      ${review.strengths && review.strengths.length > 0 ? `
+        <div style="background:#fff;padding:14px 16px;border-radius:10px;margin-bottom:14px">
+          <h4 style="color:#247257;margin:0 0 8px 0;font-size:15px">🌟 寫得很棒的地方 (What You Did Well)：</h4>
+          <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7">
+            ${review.strengths.map(s => `<li>${esc(s)}</li>`).join('')}
+          </ul>
+        </div>
+      ` : ''}
+
+      ${review.suggestions && review.suggestions.length > 0 ? `
+        <div style="background:#fff;padding:14px 16px;border-radius:10px;margin-bottom:14px">
+          <h4 style="color:#d9534f;margin:0 0 8px 0;font-size:15px">💡 建議修正與小提醒 (Suggestions & Fixes)：</h4>
+          <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7">
+            ${review.suggestions.map(s => `
+              <li style="margin:4px 0">
+                ${s.original ? `<del style="color:#c93b2b;margin-right:6px">${esc(s.original)}</del> ${s.correction ? `<strong style="color:#247257">➔ ${esc(s.correction)}</strong>：` : ''}` : ''}
+                ${esc(s.message)}
+              </li>
+            `).join('')}
+          </ul>
+        </div>
+      ` : ''}
+
+      ${review.missingPoints && review.missingPoints.length > 0 ? `
+        <div style="background:#fff;padding:14px 16px;border-radius:10px;margin-bottom:14px;border:1px dashed #f0ad4e">
+          <h4 style="color:#8a6d3b;margin:0 0 8px 0;font-size:15px">⚠️ 尚未涵蓋的題目提示點：</h4>
+          <ul style="margin:0;padding-left:20px;font-size:14px;line-height:1.7">
+            ${review.missingPoints.map(m => `<li>${esc(m)}</li>`).join('')}
+          </ul>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
 // ----------------- WRITING PART 6 & 7 VIEWS -----------------
-function examWritingView(partNumber) {
-  const task = writingExamTasks.find(w => w.part === Number(partNumber));
+function examWritingView(partNumber, setNumber = 1) {
+  const writings = allWritingExamTasks || writingExamTasks;
+  const currentSet = Number(setNumber) || 1;
+  const task = writings.find(w => w.part === Number(partNumber) && (w.set === currentSet || (!w.set && currentSet === 1))) || writings.find(w => w.part === Number(partNumber));
   if (!task) return empty('找不到此寫作任務', '請回到題型首頁選擇任務。', '#exam', '返回題型庫');
 
   const draft = state.drafts[task.id] || '';
   const currentCount = wordCount(draft);
+  const reviews = readReviews();
+  const currentReview = reviews[task.id];
 
   return `
-    ${heading(task.title, `${task.type} · Write ${task.min} words or more. Answer all parts of the question.`, 'A2 KEY WRITING PRACTICE', '#exam', '← 返回題型庫')}
+    ${heading(`${task.title} (Set ${currentSet})`, `${task.type} · Write ${task.min} words or more. Answer all parts of the question.`, 'A2 KEY WRITING PRACTICE', '#exam', '← 返回題型庫')}
 
     <div class="learning-layout">
       <section class="panel">
+        <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+          <a class="btn ${currentSet === 1 ? '' : 'secondary'}" href="#exam/readingWriting/${partNumber}/1" style="font-size:13px;padding:6px 14px">試卷一 (Set 1)</a>
+          <a class="btn ${currentSet === 2 ? '' : 'secondary'}" href="#exam/readingWriting/${partNumber}/2" style="font-size:13px;padding:6px 14px;${currentSet === 2 ? 'background:#2d8a6b' : ''}">★ 試卷二 (Set 2 全新題目)</a>
+        </div>
+
         <div class="writing-prompt" lang="en">
           <p style="font-weight:600;font-size:18px">${esc(task.prompt)}</p>
 
@@ -732,52 +844,62 @@ function examWritingView(partNumber) {
 
           ${task.part === 7 ? `
             <div class="story-scenes">
-              <div class="scene-card">
-                <svg viewBox="0 0 160 100" fill="none">
-                  <rect width="160" height="100" rx="8" fill="#eef5e8"/>
-                  <circle cx="130" cy="30" r="14" fill="#fedc7d"/>
-                  <path d="M0 80 Q50 65 100 80 T160 75 L160 100 L0 100 Z" fill="#9bc795"/>
-                  <circle cx="50" cy="55" r="7" fill="#f49c82"/>
-                  <path d="M50 62 L50 82 M44 70 L56 70" stroke="#48624d" stroke-width="2"/>
-                  <circle cx="70" cy="58" r="6" fill="#f49c82"/>
-                  <path d="M70 64 L70 82 M65 72 L75 72" stroke="#48624d" stroke-width="2"/>
-                  <polygon points="105,25 115,35 105,45 95,35" fill="#e75c5c"/>
-                  <line x1="70" y1="65" x2="105" y2="45" stroke="#777" stroke-dasharray="2,2"/>
-                </svg>
-                <h4>Picture 1</h4>
-                <p>Sunny day in park, carrying a red kite.</p>
-              </div>
+              ${task.scenes ? task.scenes.map(sc => `
+                <div class="scene-card">
+                  <div style="background:#eef5e8;height:90px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:32px">
+                    ${sc.number === 1 ? '🍋' : sc.number === 2 ? '🌧️' : '☂️'}
+                  </div>
+                  <h4>${esc(sc.title)}</h4>
+                  <p>${esc(sc.description)}</p>
+                </div>
+              `).join('') : `
+                <div class="scene-card">
+                  <svg viewBox="0 0 160 100" fill="none">
+                    <rect width="160" height="100" rx="8" fill="#eef5e8"/>
+                    <circle cx="130" cy="30" r="14" fill="#fedc7d"/>
+                    <path d="M0 80 Q50 65 100 80 T160 75 L160 100 L0 100 Z" fill="#9bc795"/>
+                    <circle cx="50" cy="55" r="7" fill="#f49c82"/>
+                    <path d="M50 62 L50 82 M44 70 L56 70" stroke="#48624d" stroke-width="2"/>
+                    <circle cx="70" cy="58" r="6" fill="#f49c82"/>
+                    <path d="M70 64 L70 82 M65 72 L75 72" stroke="#48624d" stroke-width="2"/>
+                    <polygon points="105,25 115,35 105,45 95,35" fill="#e75c5c"/>
+                    <line x1="70" y1="65" x2="105" y2="45" stroke="#777" stroke-dasharray="2,2"/>
+                  </svg>
+                  <h4>Picture 1</h4>
+                  <p>Sunny day in park, carrying a red kite.</p>
+                </div>
 
-              <div class="scene-card">
-                <svg viewBox="0 0 160 100" fill="none">
-                  <rect width="160" height="100" rx="8" fill="#eaf0f6"/>
-                  <path d="M120 90 L120 40 M110 45 Q120 15 140 40" stroke="#795548" stroke-width="6"/>
-                  <circle cx="125" cy="30" r="24" fill="#6da870"/>
-                  <path d="M20 30 Q50 20 80 35 M30 45 Q60 35 90 50" stroke="#a0b8cc" stroke-width="2" stroke-linecap="round"/>
-                  <polygon points="120,20 128,28 120,36 112,28" fill="#e75c5c"/>
-                  <circle cx="45" cy="65" r="6" fill="#f49c82"/>
-                  <path d="M45 71 L45 88 M40 76 L50 76" stroke="#48624d" stroke-width="2"/>
-                </svg>
-                <h4>Picture 2</h4>
-                <p>Strong gust of wind blows kite into tree.</p>
-              </div>
+                <div class="scene-card">
+                  <svg viewBox="0 0 160 100" fill="none">
+                    <rect width="160" height="100" rx="8" fill="#eaf0f6"/>
+                    <path d="M120 90 L120 40 M110 45 Q120 15 140 40" stroke="#795548" stroke-width="6"/>
+                    <circle cx="125" cy="30" r="24" fill="#6da870"/>
+                    <path d="M20 30 Q50 20 80 35 M30 45 Q60 35 90 50" stroke="#a0b8cc" stroke-width="2" stroke-linecap="round"/>
+                    <polygon points="120,20 128,28 120,36 112,28" fill="#e75c5c"/>
+                    <circle cx="45" cy="65" r="6" fill="#f49c82"/>
+                    <path d="M45 71 L45 88 M40 76 L50 76" stroke="#48624d" stroke-width="2"/>
+                  </svg>
+                  <h4>Picture 2</h4>
+                  <p>Strong gust of wind blows kite into tree.</p>
+                </div>
 
-              <div class="scene-card">
-                <svg viewBox="0 0 160 100" fill="none">
-                  <rect width="160" height="100" rx="8" fill="#eef5e8"/>
-                  <circle cx="125" cy="30" r="24" fill="#6da870"/>
-                  <line x1="105" y1="85" x2="115" y2="35" stroke="#8d6e63" stroke-width="3"/>
-                  <line x1="112" y1="85" x2="122" y2="35" stroke="#8d6e63" stroke-width="3"/>
-                  <line x1="106" y1="75" x2="114" y2="75" stroke="#8d6e63" stroke-width="2"/>
-                  <line x1="109" y1="60" x2="117" y2="60" stroke="#8d6e63" stroke-width="2"/>
-                  <line x1="112" y1="45" x2="120" y2="45" stroke="#8d6e63" stroke-width="2"/>
-                  <circle cx="95" cy="50" r="6" fill="#f49c82"/>
-                  <circle cx="40" cy="65" r="6" fill="#f49c82"/>
-                  <circle cx="55" cy="68" r="5" fill="#f49c82"/>
-                </svg>
-                <h4>Picture 3</h4>
-                <p>Park keeper arrives with ladder and rescues kite.</p>
-              </div>
+                <div class="scene-card">
+                  <svg viewBox="0 0 160 100" fill="none">
+                    <rect width="160" height="100" rx="8" fill="#eef5e8"/>
+                    <circle cx="125" cy="30" r="24" fill="#6da870"/>
+                    <line x1="105" y1="85" x2="115" y2="35" stroke="#8d6e63" stroke-width="3"/>
+                    <line x1="112" y1="85" x2="122" y2="35" stroke="#8d6e63" stroke-width="3"/>
+                    <line x1="106" y1="75" x2="114" y2="75" stroke="#8d6e63" stroke-width="2"/>
+                    <line x1="109" y1="60" x2="117" y2="60" stroke="#8d6e63" stroke-width="2"/>
+                    <line x1="112" y1="45" x2="120" y2="45" stroke="#8d6e63" stroke-width="2"/>
+                    <circle cx="95" cy="50" r="6" fill="#f49c82"/>
+                    <circle cx="40" cy="65" r="6" fill="#f49c82"/>
+                    <circle cx="55" cy="68" r="5" fill="#f49c82"/>
+                  </svg>
+                  <h4>Picture 3</h4>
+                  <p>Park keeper arrives with ladder and rescues kite.</p>
+                </div>
+              `}
             </div>
           ` : ''}
         </div>
@@ -798,16 +920,22 @@ function examWritingView(partNumber) {
 
         <div class="actions">
           <a class="btn secondary" href="#exam">Back to Exam Hub</a>
-          <button class="btn" data-action="finish-exam-writing" data-id="${task.id}">Complete Self-Check ✓</button>
+          <button class="btn" data-action="finish-exam-writing" data-id="${task.id}" style="background:#247257">✨ 送出考官智慧批閱 (Evaluate My Writing) →</button>
         </div>
         <p id="exam-writing-feedback" class="small-note" role="status" style="margin-top:12px"></p>
+
+        ${renderReviewReport(currentReview)}
       </section>
 
       <aside class="aside-panel">
         <h3>Self-Check Checklist</h3>
         <p>Before completing, tick off each required element:</p>
         <div class="checklist">
-          ${task.checklist.map((item, idx) => `
+          ${(task.checklist || [
+            'Did you answer all required points / scenes?',
+            'Did you check your past tense verbs?',
+            'Is your writing long enough?'
+          ]).map((item, idx) => `
             <label>
               <input type="checkbox" name="exam-writing-check" value="${idx}">
               <span>${esc(item)}</span>
@@ -823,16 +951,23 @@ function examWritingView(partNumber) {
 }
 
 // ----------------- SPEAKING PART 1 & 2 VIEWS -----------------
-function examSpeakingView(partNumber) {
-  const part = speakingExamParts.find(s => s.part === Number(partNumber));
+function examSpeakingView(partNumber, setNumber = 1) {
+  const speakings = allSpeakingExamParts || speakingExamParts;
+  const currentSet = Number(setNumber) || 1;
+  const part = speakings.find(s => s.part === Number(partNumber) && (s.set === currentSet || (!s.set && currentSet === 1))) || speakings.find(s => s.part === Number(partNumber));
   if (!part) return empty('找不到此口說單元', '請回到題型首頁選擇口說單元。', '#exam', '返回題型庫');
 
   if (part.part === 1) {
     return `
-      ${heading(part.title, `${part.timing} · Answer questions about yourself, your home, school, and hobbies.`, 'A2 KEY SPEAKING PART 1', '#exam', '← 返回題型庫')}
+      ${heading(`${part.title} (Set ${currentSet})`, `${part.timing} · Answer questions about yourself, your home, school, and hobbies.`, 'A2 KEY SPEAKING PART 1', '#exam', '← 返回題型庫')}
 
       <div class="learning-layout">
         <section class="panel">
+          <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+            <a class="btn ${currentSet === 1 ? '' : 'secondary'}" href="#exam/speaking/${partNumber}/1" style="font-size:13px;padding:6px 14px">試卷一 (Set 1)</a>
+            <a class="btn ${currentSet === 2 ? '' : 'secondary'}" href="#exam/speaking/${partNumber}/2" style="font-size:13px;padding:6px 14px;${currentSet === 2 ? 'background:#2d8a6b' : ''}">★ 試卷二 (Set 2 全新話題)</a>
+          </div>
+
           <div class="speaking-q" style="background:#eaf0f6;font-size:18px;line-height:1.7">
             <span class="exam-part-pill" style="margin-bottom:10px;display:inline-block">EXAMINER INTERVIEW</span>
             <p style="font-weight:600;font-size:20px">${esc(part.instructions)}</p>
@@ -912,10 +1047,15 @@ function examSpeakingView(partNumber) {
 
   // Part 2: Collaborative Discussion
   return `
-    ${heading(part.title, `${part.timing} · Talk together with your partner about the pictures. Say why you like or dislike each activity.`, 'A2 KEY SPEAKING PART 2', '#exam', '← 返回題型庫')}
+    ${heading(`${part.title} (Set ${currentSet})`, `${part.timing} · Talk together with your partner about the pictures. Say why you like or dislike each activity.`, 'A2 KEY SPEAKING PART 2', '#exam', '← 返回題型庫')}
 
     <div class="learning-layout">
       <section class="panel">
+        <div style="display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap">
+          <a class="btn ${currentSet === 1 ? '' : 'secondary'}" href="#exam/speaking/${partNumber}/1" style="font-size:13px;padding:6px 14px">試卷一 (Set 1)</a>
+          <a class="btn ${currentSet === 2 ? '' : 'secondary'}" href="#exam/speaking/${partNumber}/2" style="font-size:13px;padding:6px 14px;${currentSet === 2 ? 'background:#2d8a6b' : ''}">★ 試卷二 (Set 2 全新情境)</a>
+        </div>
+
         <div class="speaking-q" style="background:#fdf8eb;font-size:18px;line-height:1.7">
           <span class="exam-part-pill" style="margin-bottom:10px;display:inline-block">COLLABORATIVE DISCUSSION</span>
           <p style="font-weight:600;font-size:19px">${esc(part.situation)}</p>
@@ -1401,6 +1541,8 @@ function writingView(id) {
   const w = writing.find(w => w.id === id);
   if (!w) return empty('找不到這個寫作任務', '回到寫作頁，重新選擇一個題目。', '#writing', '查看寫作任務');
   const draft = state.drafts[id] || '';
+  const reviews = readReviews();
+  const currentReview = reviews[id];
 
   return `
     ${heading(w.title, `${w.type} · 至少 ${w.min} 個英文單字。先把三個重點寫完整。`, 'YOUR IDEAS, IN ENGLISH', '#writing')}
@@ -1423,9 +1565,10 @@ function writingView(id) {
         </details>
         <div class="actions">
           <a class="btn secondary" href="#writing">其他寫作任務</a>
-          <button class="btn" data-action="finish-writing" data-id="${id}">完成自我檢查 ✓</button>
+          <button class="btn" data-action="finish-writing" data-id="${id}" style="background:#247257">✨ 送出智慧批閱 (Evaluate My Writing) →</button>
         </div>
         <p id="writing-feedback" class="small-note" role="status"></p>
+        ${renderReviewReport(currentReview)}
       </section>
       <aside class="aside-panel">
         <h3>寫作小清單</h3>
@@ -1673,6 +1816,7 @@ function render(focus = true) {
   const route = parts[0] || 'home';
   const param1 = parts[1];
   const param2 = parts[2];
+  const param3 = parts[3];
 
   updateBadge();
 
@@ -1698,46 +1842,48 @@ function render(focus = true) {
   } else if (route === 'exam') {
     if (param1 && param2) {
       const partNum = Number(param2);
+      const setNum = param3 ? Number(param3) : null;
       if (param1 === 'readingWriting') {
         if (partNum === 6 || partNum === 7) {
-          main.innerHTML = examWritingView(partNum);
+          main.innerHTML = examWritingView(partNum, setNum || 1);
         } else {
-          const qs = examQuestions.filter(q => q.paper === 'readingWriting' && q.part === partNum);
+          const qs = examQuestions.filter(q => q.paper === 'readingWriting' && q.part === partNum && (!setNum || q.set === setNum));
           startExamSession(qs, {
-            title: `Reading & Writing · Part ${partNum}`,
+            title: `Reading & Writing · Part ${partNum}${setNum ? ` (Set ${setNum})` : ''}`,
             paper: 'readingWriting',
             part: partNum
           });
           return;
         }
       } else if (param1 === 'listening') {
-        const qs = examQuestions.filter(q => q.paper === 'listening' && q.part === partNum);
+        const qs = examQuestions.filter(q => q.paper === 'listening' && q.part === partNum && (!setNum || q.set === setNum));
         startExamSession(qs, {
-          title: `Listening · Part ${partNum}`,
+          title: `Listening · Part ${partNum}${setNum ? ` (Set ${setNum})` : ''}`,
           paper: 'listening',
           part: partNum
         });
         return;
       } else if (param1 === 'speaking') {
-        main.innerHTML = examSpeakingView(partNum);
+        main.innerHTML = examSpeakingView(partNum, setNum || 1);
       }
     } else {
       main.innerHTML = examHub();
     }
   } else if (route === 'mock') {
     const paperName = param1;
+    const setNum = Number(param2) || 1;
     if (paperName === 'readingWriting') {
-      const assembled = assemblePaper('readingWriting');
+      const assembled = assemblePaper('readingWriting', setNum);
       startExamSession(assembled.objective, {
-        title: 'Full Mock: Reading & Writing (Parts 1–5)',
+        title: `Full Mock (Set ${setNum}): Reading & Writing (Parts 1–5)`,
         paper: 'readingWriting',
         isMock: true
       });
       return;
     } else if (paperName === 'listening') {
-      const assembled = assemblePaper('listening');
+      const assembled = assemblePaper('listening', setNum);
       startExamSession(assembled.objective, {
-        title: 'Full Mock: Listening (Parts 1–5)',
+        title: `Full Mock (Set ${setNum}): Listening (Parts 1–5)`,
         paper: 'listening',
         isMock: true
       });
@@ -1852,9 +1998,9 @@ main.addEventListener('click', e => {
       const rate = Number(document.querySelector('#speech-rate')?.value || 0.9);
       const audioFile = getExamListeningAudioPath(q);
       if (audioFile) {
-        playAudioFile(audioFile, null, rate);
+        playAudioFile(audioFile, q.script, rate);
       } else {
-        notify('找不到對應的真人錄音檔。');
+        speak(q.script, rate);
       }
       render(false);
     }
@@ -1915,23 +2061,24 @@ main.addEventListener('click', e => {
     }
   }
   if (a === 'finish-exam-writing') {
-    const task = writingExamTasks.find(w => w.id === id);
+    const writings = allWritingExamTasks || writingExamTasks;
+    const task = writings.find(w => w.id === id);
     if (!task) return;
     const feedback = document.querySelector('#exam-writing-feedback');
-    const count = wordCount(state.drafts[id] || '');
-    if (count < task.min) {
-      feedback.textContent = `Current count is ${count} words. Please write at least ${task.min} words.`;
+    const draft = (state.drafts[id] || '').trim();
+    const count = wordCount(draft);
+    if (count === 0) {
+      if (feedback) feedback.textContent = '請先在草稿框寫下英文短文，再送出智慧批閱！';
       return;
     }
-    const checks = document.querySelectorAll('[name="exam-writing-check"]:checked').length;
-    if (checks < task.checklist.length) {
-      feedback.textContent = 'Please confirm all checklist items on the right before finishing.';
-      return;
-    }
+    const review = evaluateWriting(draft, task);
+    saveReview(id, review);
     recordActivity(state, 'exam-writing', id);
     persist();
-    feedback.textContent = 'Practice completed! Your response has been saved.';
-    notify('寫作練習已完成記錄！');
+    render(false);
+    notify(`✨ 考官批閱完成！獲得 ${review.totalScore} / 20 分（${review.grade.text}）`);
+    const rep = document.getElementById('writing-review-report');
+    if (rep) rep.scrollIntoView({ behavior: 'smooth' });
   }
   if (a === 'finish-exam-speaking') {
     recordActivity(state, 'exam-speaking', id);
@@ -2050,20 +2197,22 @@ main.addEventListener('click', e => {
   }
   if (a === 'finish-writing') {
     const w = writing.find(w => w.id === id);
+    if (!w) return;
     const feedback = document.querySelector('#writing-feedback');
-    const count = wordCount(state.drafts[id] || '');
-    if (count < w.min) {
-      feedback.textContent = `目前 ${count} 字，再試著多寫一點，達到至少 ${w.min} 字。`;
+    const draft = (state.drafts[id] || '').trim();
+    const count = wordCount(draft);
+    if (count === 0) {
+      if (feedback) feedback.textContent = '請先在草稿框寫下英文短文，再送出智慧批閱！';
       return;
     }
-    if (document.querySelectorAll('[name="writing-check"]:checked').length !== 4) {
-      feedback.textContent = '先確認右側（手機下方）的四個檢查項目，再完成這次練習。';
-      return;
-    }
+    const review = evaluateWriting(draft, w);
+    saveReview(id, review);
     recordActivity(state, 'writing', id);
     persist();
-    feedback.textContent = '這次寫作練習已記錄！可以請家人或老師再幫你讀一讀。';
-    notify('寫作練習已記錄。每個任務每天記錄一次。');
+    render(false);
+    notify(`✨ 考官批閱完成！獲得 ${review.totalScore} / 20 分（${review.grade.text}）`);
+    const rep = document.getElementById('writing-review-report');
+    if (rep) rep.scrollIntoView({ behavior: 'smooth' });
   }
   if (a === 'finish-speaking') {
     recordActivity(state, 'speaking', id);

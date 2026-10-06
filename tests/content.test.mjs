@@ -17,7 +17,7 @@ test('the vocabulary bank contains at least 500 useful unique entries',()=>{
  assert.equal(vocabQuestions.length,vocabulary.length);
 });
 test('promised exam lesson coverage is present',()=>{
- assert.equal(reading.length,12);assert.equal(listening.length,10);assert.equal(writing.length,4);assert.equal(speaking.length,8);
+ assert.equal(reading.length,24);assert.equal(listening.length,20);assert.equal(writing.length,8);assert.equal(speaking.length,16);
 });
 test('writing samples meet word minimums and all tasks provide guidance',()=>{
  for(const w of writing){assert.ok(wordCount(w.sample)>=w.min,`${w.id} sample too short`);assert.equal(w.points.length,3);assert.equal(w.hints.length,3)}

@@ -1,5 +1,5 @@
 // A2 Key for Schools Exam Engine
-import {examParts, examQuestions, writingExamTasks, speakingExamParts} from './exam-content.mjs';
+import {examParts, examQuestions, writingExamTasks, allWritingExamTasks, speakingExamParts, allSpeakingExamParts} from './exam-content.mjs';
 
 export const normaliseTextAnswer = value =>
   String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
@@ -14,13 +14,17 @@ export function isAnswerCorrect(question, value) {
   return Number(value) === question.answer;
 }
 
-export function assemblePaper(paper) {
+export function assemblePaper(paper, set = 1) {
+  const writings = allWritingExamTasks || writingExamTasks;
+  const speakings = allSpeakingExamParts || speakingExamParts;
+
   if (paper === 'readingWriting') {
-    const objective = examQuestions.filter(q => q.paper === 'readingWriting');
-    const writing = writingExamTasks.filter(w => w.paper === 'readingWriting');
+    const objective = examQuestions.filter(q => q.paper === 'readingWriting' && (q.set === set || (!q.set && set === 1)));
+    const writing = writings.filter(w => w.paper === 'readingWriting' && (w.set === set || (!w.set && set === 1)));
     return {
       paper: 'readingWriting',
       name: 'Reading and Writing',
+      set,
       objective,
       writing,
       total: objective.length + writing.length
@@ -28,21 +32,24 @@ export function assemblePaper(paper) {
   }
 
   if (paper === 'listening') {
-    const objective = examQuestions.filter(q => q.paper === 'listening');
+    const objective = examQuestions.filter(q => q.paper === 'listening' && (q.set === set || (!q.set && set === 1)));
     return {
       paper: 'listening',
       name: 'Listening',
+      set,
       objective,
       total: objective.length
     };
   }
 
   if (paper === 'speaking') {
+    const parts = speakings.filter(s => s.set === set || (!s.set && set === 1));
     return {
       paper: 'speaking',
       name: 'Speaking',
-      parts: speakingExamParts,
-      total: speakingExamParts.length
+      set,
+      parts,
+      total: parts.length
     };
   }
 
